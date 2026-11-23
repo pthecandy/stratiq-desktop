@@ -1,0 +1,68 @@
+name: Build StratIQ for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Files uploaded through GitHub's website all land in one folder; put them where Tauri expects them
+      - name: Arrange files
+        shell: pwsh
+        run: |
+          $map = [ordered]@{
+            'Cargo.toml'      = 'src-tauri/Cargo.toml'
+            'build.rs'        = 'src-tauri/build.rs'
+            'tauri.conf.json' = 'src-tauri/tauri.conf.json'
+            'main.rs'         = 'src-tauri/src/main.rs'
+            'offline.html'    = 'dist/index.html'
+          }
+          foreach ($from in $map.Keys) {
+            $to = $map[$from]
+            if (Test-Path $from) {
+              New-Item -ItemType Directory -Force -Path (Split-Path $to) | Out-Null
+              Move-Item -Force $from $to
+            }
+          }
+          Get-ChildItem -Recurse -File src-tauri, dist | Select-Object -ExpandProperty FullName
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Make app icons
+        run: npx --yes @tauri-apps/cli@2 icon app-icon.png
+
+      - name: Build the installer
+        run: npx --yes @tauri-apps/cli@2 build
+
+      - name: Save the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: StratIQ-Windows-Installer
+          path: src-tauri/target/release/bundle/nsis/*.exe
+
+      - name: Publish a release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: StratIQ for Windows (build ${{ github.run_number }})
+          files: src-tauri/target/release/bundle/nsis/*.exe
