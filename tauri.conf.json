@@ -15,15 +15,26 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "publisher": "StratIQ",
     "shortDescription": "Post-match scrim review for teams",
     "longDescription": "StratIQ shows your team's finished scrims and tournament games: scoreboards, economy, heatmaps and team stats.",
     "copyright": "StratIQ isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties.",
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
     "windows": {
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "../installer-header.bmp",
+        "sidebarImage": "../installer-sidebar.bmp",
+        "installerHooks": "../installer-hooks.nsh"
       }
     }
   }
